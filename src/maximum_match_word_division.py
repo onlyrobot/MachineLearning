@@ -5,82 +5,86 @@ Description: 最大匹配法中文分词
 '''
 
 
-def fmm(words: set, sentence: str) -> str:
+def fmm(words: set, sentences: list) -> list:
     '''前向最大匹配(Forward Maximum Match)
 
     Args:
         words: 词典
-        sentence: 要分词的句子
+        sentences: 要分词的句子
     
     Returns:
-        用/分隔的分好的词
+        分好的词序列
     '''
-    n = len(sentence)
     m = len(max(words, key = lambda x: len(x)))
-    res = []
-    i = 0
-    while i < n:
-        j = i + m if i + m < n else n
-        while i < j:
-            if sentence[i: j] in words:
-                res.append(sentence[i: j])
-                i = j
-                break
+    divided_sentences = []
+    for sentence in sentences:
+        n = len(sentence)
+        divided_sentence = []
+        i = 0
+        while i < n:
+            j = i + m if i + m < n else n
+            while i < j:
+                if sentence[i: j] in words:
+                    divided_sentence.append(sentence[i: j])
+                    i = j
+                    break
+                else:
+                    j -= 1
             else:
-                j -= 1
-        else:
-            res.append(sentence[i])
-            i += 1
-    return '/'.join(res)
+                divided_sentence.append(sentence[i])
+                i += 1
+        divided_sentences.append(divided_sentence)
+    # return ['/'.join(ds) for ds in divided_sentences]
+    return divided_sentences
 
 
-def bmm(words: set, sentence: str) -> str:
+def bmm(words: set, sentences: list) -> list:
     '''反向最大匹配(Back Maximum Match)
     
     Args:
         words: 词典
-        sentence: 要分词的句子
+        sentences: 要分词的句子
     
     Returns:
-        用/分隔好的词
+        分好的词序列
     '''
-    n = len(sentence)
     m = len(max(words, key = lambda x: len(x)))
-    res = []
-    j = n
-    while j > 0:
-        i = j - m if j - m > 0 else 0
-        while i < j:
-            if sentence[i: j] in words:
-                res.append(sentence[i: j])
-                j = i
-                break
+    divided_sentences = []
+    for sentence in sentences:
+        n = len(sentence)
+        divided_sentence = []
+        j = n
+        while j > 0:
+            i = j - m if j - m > 0 else 0
+            while i < j:
+                if sentence[i: j] in words:
+                    divided_sentence.append(sentence[i: j])
+                    j = i
+                    break
+                else:
+                    i += 1
             else:
-                i += 1
-        else:
-            res.append(sentence[i - 1])
-            j -= 1
-    res.reverse()
-    return '/'.join(res)
-
-
-def get_words() -> set:
-    '''获取词典'''
-    return { '他', '是', '研究生', '研究', '物化', '生物', '学', '国人',
-            '化学', '的', '泰国', '泰国人', '人民', '很', '友好', '人' }
+                divided_sentence.append(sentence[i - 1])
+                j -= 1
+        divided_sentence.reverse()
+        divided_sentences.append(divided_sentence)
+    # return ['/'.join(ds) for ds in divided_sentences]
+    return divided_sentences
 
 
 def main():
     '''匹配测试'''
-    sentence = '他不是研究生物化学的'
-    print(sentence, '的匹配结果：')
-    print('正向最大匹配：', fmm(get_words(), sentence))
-    print('反向最大匹配：', bmm(get_words(), sentence))
+    words = { '他', '是', '研究生', '研究', '物化', '生物', '学', '国人',
+            '化学', '的', '泰国', '泰国人', '人民', '很', '友好', '人' }
+    sentences = ['他不是研究生物化学的']
+    print(sentences, '的匹配结果：')
+    print('正向最大匹配：', fmm(words, sentences))
+    print('反向最大匹配：', bmm(words, sentences))
 
-    sentence = '他不是研究生物化学的'
-    print(sentence, '的匹配结果：')
-    print('正向最大匹配：', fmm(get_words(), sentence))
-    print('反向最大匹配：', bmm(get_words(), sentence))
+    sentences = ['泰国人民很友好']
+    print(sentences, '的匹配结果：')
+    print('正向最大匹配：', fmm(words, sentences))
+    print('反向最大匹配：', bmm(words, sentences))
 
 
 if __name__ == '__main__':

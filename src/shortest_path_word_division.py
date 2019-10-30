@@ -69,7 +69,7 @@ def shortest_path(start_node, end_node) -> list:
     return get_path(end_node)
 
 
-def divide(words: set, sentence: str) -> str:
+def divide(words: set, sentences: list) -> list:
     '''实现分词
 
     Args:
@@ -77,56 +77,59 @@ def divide(words: set, sentence: str) -> str:
         sentence: 要被分词的句子
 
     Returns:
-        用/分隔的分好的词
+        分好的词序列
     '''
-    n, m = len(sentence), len(max(words, key = lambda x: len(x)))
-    nodes = set()
-    # i_map用于查找所有开始位置为i的节点
-    i_map = {}
-    # 创建节点
-    for i in range(n):
-        i_map[i] = []
-        for j in range(i + 1, min(i + m + 1, n + 1)):
-            if sentence[i: j] in words:
-                node = GraphNode(i, j)
-                nodes.add(node)
-                i_map[i].append(node)
-    # 添加额外的开始、结束节点，方便寻找最短路径
-    start_node = GraphNode(-1, 0)
-    end_node = GraphNode(n, n + 1)
-    i_map[n], i_map[n + 1] = [], []
-    i_map[n].append(end_node)
-    nodes.add(start_node)
-    nodes.add(end_node)
-    # 构建图
-    for node in nodes:
-        for adj_node in i_map[node.j]:
-            node.adjacency.append(adj_node)
-    # # 输出图
-    # def print_graph(start_node, space_num = 0):
-    #     if start_node.j == n + 1:
-    #         return
-    #     elif start_node.i != -1:
-    #         print(space_num * ' ' + sentence[start_node.i: start_node.j])
-    #         space_num += 3
-    #     for adj_node in start_node.adjacency:
-    #         print_graph(adj_node, space_num)
-    # print('生成的图：')
-    # print_graph(start_node)
-    # 寻找最短路径，可能有多条
-    pathes = shortest_path(start_node, end_node)
-    return ['/'.join([sentence[i.i: i.j] for i in path]) for path in pathes]
+    m = len(max(words, key = lambda x: len(x)))
+    divided_sentences = []
+    for sentence in sentences:
+        nodes, n = set(), len(sentence)
+        # i_map用于查找所有开始位置为i的节点
+        i_map = {}
+        # 创建节点
+        for i in range(n):
+            i_map[i] = []
+            for j in range(i + 1, min(i + m + 1, n + 1)):
+                if sentence[i: j] in words:
+                    node = GraphNode(i, j)
+                    nodes.add(node)
+                    i_map[i].append(node)
+        # 添加额外的开始、结束节点，方便寻找最短路径
+        start_node = GraphNode(-1, 0)
+        end_node = GraphNode(n, n + 1)
+        i_map[n], i_map[n + 1] = [], []
+        i_map[n].append(end_node)
+        nodes.add(start_node)
+        nodes.add(end_node)
+        # 构建图
+        for node in nodes:
+            for adj_node in i_map[node.j]:
+                node.adjacency.append(adj_node)
+        # # 输出图
+        # def print_graph(start_node, space_num = 0):
+        #     if start_node.j == n + 1:
+        #         return
+        #     elif start_node.i != -1:
+        #         print(space_num * ' ' + sentence[start_node.i: start_node.j])
+        #         space_num += 3
+        #     for adj_node in start_node.adjacency:
+        #         print_graph(adj_node, space_num)
+        # print('生成的图：')
+        # print_graph(start_node)
 
-
-def get_words() -> set:
-    '''获取词典'''
-    return { '他', '只', '只会', '诊断', '一', '一般', '的', '疾病',
-            '病', '说', '说的', '的', '的确', '确实', '实在', '在', '在理' }
+        # 寻找最短路径，可能有多条
+        pathes = shortest_path(start_node, end_node)
+        # 返回所有的最短路径分词
+        divided_sentences.append([[sentence[node.i: node.j] for 
+        node in path[1: -1]] for path in pathes])
+        # divided_sentences.append([sentence[i.i: i.j] for i in pathes[0]][1: -1])
+    return divided_sentences
 
 
 def main():
-    print('他只会诊断一般的疾病：', divide(get_words(), '他只会诊断一般的疾病'))
-    print('他说的确实在理：', divide(get_words(), '他说的确实在理'))
+    words = { '他', '只', '只会', '诊断', '一', '一般', '的', '疾病',
+            '病', '说的', '他说', '的', '的确', '确实', '实在', '在', '在理' }
+    print('他只会诊断一般的疾病：', divide(words, ['他只会诊断一般的疾病']))
+    print('他说的确实在理：', divide(words, ['他说的确实在理']))
 
 
 if __name__ == '__main__':
