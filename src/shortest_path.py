@@ -8,18 +8,17 @@ Description: 用最短路径的方式来中文分词
 from queue import Queue
 
 
-class GraphNode:
+class Node:
     '''图的节点
 
     Attributes:
-        i: int，表示该节点对应于的词开始位置
-        j: int，表示该节点对应于词的结束位置
+        word: str，该节点表示的词
         adjacency: list，节点的出边
         step: int，用于辅助记录最短路径
         pre_nodes: list，用于辅助记录最短路径，表示前驱节点
     '''
-    def __init__(self, i: int, j: int):
-        self.i, self.j = i, j
+    def __init__(self, word: str):
+        self.word = word
         self.adjacency = []
         self.step = -1
         self.pre_nodes = []
@@ -69,12 +68,46 @@ def shortest_path(start_node, end_node) -> list:
     return get_path(end_node)
 
 
-def divide(words: set, sentences: list) -> list:
+def gen_graph(sentence: str, start_node: Node, 
+end_node: Node, buf: dict, words: set, m: int) -> Node:
+    '''生成分词的图
+    
+    递归的生成句子对应的分词路径组成的图
+
+    Args:
+        sentence: 要分词的句子
+        start_node: 该句子前面的节点
+        end_node: 终止节点
+        buf: 用于记忆化搜索，降低复杂度
+        words: 词典
+        m: 单个词的最大长度
+    '''
+    if sentence not in buf:
+        if not sentence:
+            buf[sentence] = {end_node}
+        else:
+            nodes = buf[sentence] = set()
+            for end in range(min(len(sentence), m), 0, -1):
+                word = sentence[: end]
+                if word in words:
+                    node = Node(word)
+                    gen_graph(sentence[end:], node, end_node, buf, words, m)
+                    nodes.add(node)
+            if not nodes:    # 未登录词处理
+                node = Node(sentence[0])
+                gen_graph(sentence[1:], node, end_node, buf, words, m)
+                nodes.add(node)
+    for node in buf[sentence]:
+        start_node.adjacency.append(node)
+
+
+def divide(words: set, sentences: list, all: bool=False) -> list:
     '''实现分词
 
     Args:
         words: 词典
         sentence: 要被分词的句子
+        all: 指定是否返回所有可能的分词
 
     Returns:
         分好的词序列
@@ -82,46 +115,18 @@ def divide(words: set, sentences: list) -> list:
     m = len(max(words, key = lambda x: len(x)))
     divided_sentences = []
     for sentence in sentences:
-        nodes, n = set(), len(sentence)
-        # i_map用于查找所有开始位置为i的节点
-        i_map = {}
-        # 创建节点
-        for i in range(n):
-            i_map[i] = []
-            for j in range(i + 1, min(i + m + 1, n + 1)):
-                if sentence[i: j] in words:
-                    node = GraphNode(i, j)
-                    nodes.add(node)
-                    i_map[i].append(node)
-        # 添加额外的开始、结束节点，方便寻找最短路径
-        start_node = GraphNode(-1, 0)
-        end_node = GraphNode(n, n + 1)
-        i_map[n], i_map[n + 1] = [], []
-        i_map[n].append(end_node)
-        nodes.add(start_node)
-        nodes.add(end_node)
-        # 构建图
-        for node in nodes:
-            for adj_node in i_map[node.j]:
-                node.adjacency.append(adj_node)
-        # # 输出图
-        # def print_graph(start_node, space_num = 0):
-        #     if start_node.j == n + 1:
-        #         return
-        #     elif start_node.i != -1:
-        #         print(space_num * ' ' + sentence[start_node.i: start_node.j])
-        #         space_num += 3
-        #     for adj_node in start_node.adjacency:
-        #         print_graph(adj_node, space_num)
-        # print('生成的图：')
-        # print_graph(start_node)
+        start_node = Node('S')
+        end_node = Node('D')
+        gen_graph(sentence, start_node, end_node, {}, words, m)
 
         # 寻找最短路径，可能有多条
         pathes = shortest_path(start_node, end_node)
-        # 返回所有的最短路径分词
-        divided_sentences.append([[sentence[node.i: node.j] for 
-        node in path[1: -1]] for path in pathes])
-        # divided_sentences.append([sentence[i.i: i.j] for i in pathes[0]][1: -1])
+        if all:    # 返回所有的最短路径分词
+            divided_sentences.append([[node.word for 
+            node in path[1: -1]] for path in pathes])
+        else:    # 返回其中一条最短路径
+            divided_sentences.append([node.word 
+            for node in pathes[0]][1: -1])
     return divided_sentences
 
 
@@ -129,7 +134,7 @@ def main():
     words = { '他', '只', '只会', '诊断', '一', '一般', '的', '疾病',
             '病', '说的', '他说', '的', '的确', '确实', '实在', '在', '在理' }
     print('他只会诊断一般的疾病：', divide(words, ['他只会诊断一般的疾病']))
-    print('他说的确实在理：', divide(words, ['他说的确实在理']))
+    print('他说的确实在理：', divide(words, ['他说的确实在理'], True))
 
 
 if __name__ == '__main__':
