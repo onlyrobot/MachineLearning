@@ -244,7 +244,7 @@ class NGram:
                         nodes.add(self.gen_graph(sentence[end:], 
                         (prior_word + (word,))[1:], buf))
                 if not nodes and '' not in buf:    # 未登录词处理
-                    for end in range(1, min(len(sentence), self.max_len) + 1):
+                    for end in range(1, min(len(sentence), 2) + 1):
                         nodes.add(self.gen_graph(sentence[end:], 
                         (prior_word + (sentence[: end],))[1:], buf))
         for node in buf[sentence]:

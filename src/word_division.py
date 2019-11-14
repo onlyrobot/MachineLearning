@@ -10,20 +10,8 @@ import shortest_path as sp
 import ngram
 
 
-def get_words():
-    # word_file = open('E:/DataSet/NLP/words/微软拼音.txt', 'r', encoding='ansi')
-    # words = set(word_file.read().splitlines())
-
-    # word_file.close()
-    # # 添加额外的utf-8词库
-    # file_names = ['搜狗万能词库.txt', '体育爱好者.txt', '标准大词库.txt']
-    # for file_name in file_names:
-    #     word_file = open('E:/DataSet/NLP/words/' + file_name, 'r', encoding='utf-8')
-    #     words = words.union(set(word_file.read().splitlines()))
-    #     word_file.close()
-    # 添加训练语料库
-    word_file = open('E:/DataSet/NLP/中文分词语料（山西大学提供）/' + 
-    '训练语料（528250词，Unicode格式）.txt', 'r', encoding='utf-16')
+def get_words(path, encoding='utf-16'):
+    word_file = open(path, 'r', encoding=encoding)
     words = set(word_file.read().split('  '))
     word_file.close()
     return words
@@ -126,7 +114,8 @@ def print_ratio(answers, results):
 
 
 def main():
-    words = get_words()
+    words = get_words('E:/DataSet/NLP/中文分词语料（山西大学提供）/' + 
+    '训练语料（528250词，Unicode格式）.txt')
     seg_trian = get_seg_sentences('E:/DataSet/NLP/中文分词语料（山西大学提供）/' + 
     '训练语料（528250词，Unicode格式）.txt')
     seg_test = get_sentences('E:/DataSet/NLP/中文分词语料（山西大学提供）/' + 
@@ -172,6 +161,7 @@ def main():
     gram4.pos(pos_test[:300])))
 
     # 几个测试用例
+    print('几个测试用例：')
     print(gram3.seg(['大连港年吞吐量超七千万吨', '今天同事问了我一道面试题']))
     print(gram3.pos([['迈向', '充满', '希望', '的', '新', '世纪', '——', '一九九八年', '新年', 
     '讲话', '（', '附', '图片', '１', '张', '）'], ['希望', '是', '什么', '东西']]))
